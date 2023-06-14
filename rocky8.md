@@ -28,6 +28,14 @@ rvm alias create default 1.8.7-p357
 
 rvm rubygems 1.5.3 --force
 gem install rails -v 2.3.3 --no-ri --no-rdoc
+gem install pg -v 0.13.1 --no-ri --no-rdoc
+gem install rake -v 0.8.7 --no-ri --no-rdoc
+gem install pg -v 0.13.1 --no-ri --no-rdoc -- --with-pg-config=/usr/local/pgsql/bin/pg_config
+rvm ruby-1.8.7-p357@global do gem uninstall rake -v 10.1.1
+rake _0.8.7_ -T
+
+echo "/usr/local/pgsql/lib" | sudo tee /etc/ld.so.conf.d/postgres.conf
+
 
 ```
 
@@ -113,3 +121,24 @@ follow INSTALL steps
 
 ```
 
+## jobsmon
+```
+sudo -iu postgres
+/usr/local/pgsql/bin/psql postgres
+create database jobsmon_development;
+create database jobsmon_production;
+create database jobsmon_test;
+
+create role siuyin with login;
+# alter role siuyin with login;
+
+grant all privileges on database jobsmon_development to siuyin;
+grant all privileges on database jobsmon_prodction to siuyin;
+grant all privileges on database jobsmon_test to siuyin;
+
+
+gem install --no-ri --no-rdoc passenger -v 4.0.40
+passenger start -e development -p 3000 -d
+passenger status
+passenger stop
+```
