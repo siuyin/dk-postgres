@@ -1,5 +1,16 @@
 # Rocky Linux 8 environtment
 
+## IP Addresses
+
+Host: 192.168.10.70
+
+mailer:
+```
+exec env MAILER_HOST=dctmail.discovery.com \
+MAILER_PORT=25 \
+MAILER_NET_ENDP='tcp://*:6101' \
+/home/siuyin/go/src/mailer/mailer-20190404_1752
+```
 ## Development Tools
 
 dnf group install "Development Tools"
@@ -141,4 +152,34 @@ gem install --no-ri --no-rdoc passenger -v 4.0.40
 passenger start -e development -p 3000 -d
 passenger status
 passenger stop
+```
+
+## runit (sv and friends)
+```
+wget http://smarden.org/runit/runit-2.1.2.tar.gz
+
+# unpacks into admin sub-folder
+tar xf runit-2.1.2.tar.gz
+
+# manpages reference runit and not runit-2.1.2
+ln -s runit-2.1.2 runit
+
+cd admin/runit-2.1.2
+cp src/Makefile src/Makefile.old
+
+# compile dynamically linked executables rather than static
+# binaries will be in command/
+sed -e 's/ -static//' <src/Makefile.old >src/Makefile
+package/compile
+
+package/check
+
+# install by copying over execuatables
+sudo mkdir -p /usr/local/runit/bin
+sudo cp command/* /usr/local/runit/bin
+
+# install man pages
+sudo package/install-man
+
+echo 'export PATH=/usr/local/runit/bin:$PATH' >> $HOME/.bash_profile
 ```

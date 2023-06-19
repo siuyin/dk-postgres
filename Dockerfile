@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:20.04
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y build-essential libreadline-dev zlib1g-dev
 RUN adduser postgres
 ADD postgresql-8.1.23.tar.gz /tmp/
