@@ -15,13 +15,13 @@ MAILER_NET_ENDP='tcp://*:6101' \
 
 dnf group install "Development Tools"
 
-dnf install tmux vim-enhanced wget
+dnf install tmux vim-enhanced wget sudo procps
 
 ## Go
 wget https://go.dev/dl/go1.20.5.linux-amd64.tar.gz
  rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.5.linux-amd64.tar.gz
 
-
+.bash_profile:
 export PATH=$PATH:/usr/local/go/bin
 
 ## Ruby (via rvm)
@@ -32,20 +32,20 @@ gpg2 --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB
 curl -sSL https://get.rvm.io | bash -s stable
 
 rvm pkg install openssl
-sudo dnf config-manager --set-enabled powertools
+sudo dnf config-manager --set-enabled powertools  # named crb in rocky linux 9
 sudo dnf install libyaml-devel
 rvm install 1.8.7-p357 --with-openssl-dir=$HOME/.rvm/usr
 rvm alias create default 1.8.7-p357
 
 rvm rubygems 1.5.3 --force
 gem install rails -v 2.3.3 --no-ri --no-rdoc
-gem install pg -v 0.13.1 --no-ri --no-rdoc
 gem install rake -v 0.8.7 --no-ri --no-rdoc
-gem install pg -v 0.13.1 --no-ri --no-rdoc -- --with-pg-config=/usr/local/pgsql/bin/pg_config
 rvm ruby-1.8.7-p357@global do gem uninstall rake -v 10.1.1
+
+mkdir ~/app
+git clone git@bitbucket.org:beyondbroadcast/vodossext.git
 rake _0.8.7_ -T
 
-echo "/usr/local/pgsql/lib" | sudo tee /etc/ld.so.conf.d/postgres.conf
 
 
 ```
@@ -101,7 +101,7 @@ zmq (2.1.4)
 dnf install libuuid-devel
 wget https://github.com/zeromq/zeromq2-x/releases/download/v2.2.0/zeromq-2.2.0.tar.gz
 tar xf zeromq-2.2.0.tar.gz
-cd zeromq-2.2.0.tar.gz
+cd zeromq-2.2.0
 ./configure
 make -j8
 make check
@@ -112,14 +112,24 @@ zeromq v2 libraries are install in /usr/local/lib as is libzmq.pc (pkgconfig)
 ## mailer
 
 ```
+cd ~/app
+git clone git@bitbucket.org:beyondbroadcast/mailer.git
+cd mailer
+
 PKG_CONFIG_PATH=/usr/local/lib/pkgconfig go build -v -o mailer main.go
-sudo echo "/usr/local/lib" >  /etc/ld.so.conf.d/usrlocal.conf
+#sudo echo "/usr/local/lib" >  /etc/ld.so.conf.d/usrlocal.conf
+echo "/usr/local/lib" |sudo tee  /etc/ld.so.conf.d/usrlocal.conf
 sudo ldconfig
 ```
 
 ## postgres 8.1.23
 
 ```
+cd ~/tmp
+wget https://ftp.postgresql.org/pub/source/v8.1.23/postgresql-8.1.23.tar.gz
+tar xf postgresql-8.1.23.tar.gz
+cd postgresql-8.1.23
+
 export CFLAGS=-fno-aggressive-loop-optimizations
 sudo dnf install readline-devel zlib-devel
 
@@ -129,6 +139,10 @@ make check
 sudo make install
 
 follow INSTALL steps
+
+gem install pg -v 0.13.1 --no-ri --no-rdoc -- --with-pg-config=/usr/local/pgsql/bin/pg_config
+echo "/usr/local/pgsql/lib" | sudo tee /etc/ld.so.conf.d/postgres.conf
+sudo ldconfig
 
 ```
 
@@ -144,12 +158,15 @@ create role siuyin with login;
 # alter role siuyin with login;
 
 grant all privileges on database jobsmon_development to siuyin;
-grant all privileges on database jobsmon_prodction to siuyin;
+grant all privileges on database jobsmon_production to siuyin;
 grant all privileges on database jobsmon_test to siuyin;
 
 
-gem install --no-ri --no-rdoc passenger -v 4.0.40
+#gem install --no-ri --no-rdoc passenger -v 4.0.40
+gem install --no-ri --no-rdoc passenger -v 6.0.18
+sudo dnf install pcre-devel curl-devel
 passenger start -e development -p 3000 -d
+# fix the ruby version checks by commenting out the higher ruby version path
 passenger status
 passenger stop
 ```
@@ -168,7 +185,7 @@ cd admin/runit-2.1.2
 cp src/Makefile src/Makefile.old
 
 # compile dynamically linked executables rather than static
-# binaries will be in command/
+binaries will be in command/
 sed -e 's/ -static//' <src/Makefile.old >src/Makefile
 package/compile
 
