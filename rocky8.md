@@ -173,12 +173,14 @@ passenger stop
 
 ## runit (sv and friends)
 ```
+cd tmp
 wget http://smarden.org/runit/runit-2.1.2.tar.gz
 
 # unpacks into admin sub-folder
 tar xf runit-2.1.2.tar.gz
 
 # manpages reference runit and not runit-2.1.2
+cd admin
 ln -s runit-2.1.2 runit
 
 cd admin/runit-2.1.2
@@ -196,7 +198,36 @@ sudo mkdir -p /usr/local/runit/bin
 sudo cp command/* /usr/local/runit/bin
 
 # install man pages
+sudo dnf install man-db
 sudo package/install-man
 
 echo 'export PATH=/usr/local/runit/bin:$PATH' >> $HOME/.bash_profile
+
+
+# services
+mkdir -p ~/services/postgres
+
+cat << END > ~/services/postgres/run
+#!/bin/sh
+exec sudo /usr/local/runit/bin/chpst -u postgres /usr/local/pgsql/bin/postmaster -D /usr/local/pgsql/data 2>&1
+END
+
+cd ~/services/postgres
+chmod +x run
+
+mkdir log
+
+cat << END > ~/services/postgres/log/run
+#!/bin/sh
+exec svlogd -tt /home/siuyin/log/postgres
+END
+chmod +x ~/services/postgres/log/run
+mkdir -p ~/log
+
+cat << END | sudo tee -a /etc/rc.local
+export PATH=/usr/local/runit/bin:$PATH
+chpst -u siuyin runsvdir -P /home/siuyin/service &
+END
+sudo chmod +x /etc/rc.local
+
 ```
