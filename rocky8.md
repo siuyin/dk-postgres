@@ -29,6 +29,8 @@ export PATH=$PATH:/usr/local/go/bin
 ```
 gpg2 --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
 
+NOTE: may have to install gnupg2
+
 curl -sSL https://get.rvm.io | bash -s stable
 
 rvm pkg install openssl
@@ -43,7 +45,9 @@ gem install rake -v 0.8.7 --no-ri --no-rdoc
 rvm ruby-1.8.7-p357@global do gem uninstall rake -v 10.1.1
 
 mkdir ~/app
-git clone git@bitbucket.org:beyondbroadcast/vodossext.git
+#git clone git@bitbucket.org:beyondbroadcast/vodossext.git
+export ATPASS=...
+git clone https://lohsiuyin:$ATPASS@bitbucket.org/beyondbroadcast/vodossext.git
 rake _0.8.7_ -T
 
 
@@ -205,23 +209,23 @@ echo 'export PATH=/usr/local/runit/bin:$PATH' >> $HOME/.bash_profile
 
 
 # services
-mkdir -p ~/services/postgres
+mkdir -p ~/service/postgres
 
-cat << END > ~/services/postgres/run
+cat << END > ~/service/postgres/run
 #!/bin/sh
 exec sudo /usr/local/runit/bin/chpst -u postgres /usr/local/pgsql/bin/postmaster -D /usr/local/pgsql/data 2>&1
 END
 
-cd ~/services/postgres
+cd ~/service/postgres
 chmod +x run
 
 mkdir log
 
-cat << END > ~/services/postgres/log/run
+cat << END > ~/service/postgres/log/run
 #!/bin/sh
 exec svlogd -tt /home/siuyin/log/postgres
 END
-chmod +x ~/services/postgres/log/run
+chmod +x ~/service/postgres/log/run
 mkdir -p ~/log
 
 cat << END | sudo tee -a /etc/rc.local
